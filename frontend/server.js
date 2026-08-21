@@ -37,8 +37,9 @@ app.use('/.proxy/backend', async (req, res) => {
 
   const targetPath = req.originalUrl.replace('/.proxy/backend', '') || '/';
   const target = new URL(targetPath, backendUrl);
-  const headers = { ...req.headers };
-  delete headers.host;
+  const headers = Object.fromEntries(
+    Object.entries(req.headers).filter(([k]) => !['host','connection','keep-alive','transfer-encoding','upgrade','te','expect'].includes(k))
+  );
 
   try {
     const response = await fetch(target, {
@@ -46,6 +47,7 @@ app.use('/.proxy/backend', async (req, res) => {
       headers,
       body: ['GET', 'HEAD'].includes(req.method) ? undefined : req,
       duplex: 'half',
+      signal: AbortSignal.timeout(60000),
     });
 
     res.status(response.status);
@@ -66,8 +68,9 @@ app.use(API_PATHS, async (req, res) => {
   if (!backendUrl) return res.status(503).json({ error: 'BACKEND_URL is not configured' });
 
   const target = new URL(req.originalUrl, backendUrl);
-  const headers = { ...req.headers };
-  delete headers.host;
+  const headers = Object.fromEntries(
+    Object.entries(req.headers).filter(([k]) => !['host','connection','keep-alive','transfer-encoding','upgrade','te','expect'].includes(k))
+  );
 
   try {
     const response = await fetch(target, {
@@ -75,6 +78,7 @@ app.use(API_PATHS, async (req, res) => {
       headers,
       body: ['GET', 'HEAD'].includes(req.method) ? undefined : req,
       duplex: 'half',
+      signal: AbortSignal.timeout(60000),
     });
 
     res.status(response.status);
