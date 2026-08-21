@@ -1,0 +1,96 @@
+# ─── Render Blueprint: Prain Deploy ──────────────────────────────────────────
+# 하나의 Repository에서 Frontend + Backend 두 개의 Web Service를 배포합니다.
+# https://render.com/docs/blueprint-spec
+#
+# 사용법:
+#   1. 이 Repository를 GitHub에 push
+#   2. Render Dashboard → New → Blueprint → 이 Repository 선택
+#   3. 환경변수 입력 후 Apply
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Backend (FastAPI + Uvicorn)
+  # ═══════════════════════════════════════════════════════════════════════════
+  - type: web
+    name: prain-backend
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVars:
+      # ─── 배포 URL ───
+      - key: FRONTEND_URL
+        sync: false
+      - key: BACKEND_PUBLIC_URL
+        sync: false
+      # ─── 데이터베이스 ───
+      - key: DATABASE_URL
+        sync: false
+      # ─── 보안 ───
+      - key: SECRET_KEY
+        generateValue: true
+      - key: TOKEN_ENCRYPTION_KEY
+        sync: false
+      # ─── OpenAI ───
+      - key: OPENAI_API_KEY
+        sync: false
+      # ─── Discord OAuth ───
+      - key: DISCORD_CLIENT_ID
+        sync: false
+      - key: DISCORD_CLIENT_SECRET
+        sync: false
+      - key: DISCORD_REDIRECT_URI
+        sync: false
+      # ─── Figma ───
+      - key: FIGMA_CLIENT_ID
+        sync: false
+      - key: FIGMA_CLIENT_SECRET
+        sync: false
+      - key: FIGMA_REDIRECT_URI
+        sync: false
+      # ─── GitHub OAuth ───
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: GITHUB_REDIRECT_URI
+        sync: false
+      # ─── Notion OAuth ───
+      - key: NOTION_CLIENT_ID
+        sync: false
+      - key: NOTION_CLIENT_SECRET
+        sync: false
+      - key: NOTION_REDIRECT_URI
+        sync: false
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Frontend (Node.js / Express)
+  # ═══════════════════════════════════════════════════════════════════════════
+  - type: web
+    name: prain-frontend
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: node server.js
+    envVars:
+      # ─── Backend 연결 ───
+      - key: BACKEND_URL
+        sync: false
+      - key: VITE_BACKEND_URL
+        sync: false
+      # ─── Discord ───
+      - key: DISCORD_CLIENT_ID
+        sync: false
+      - key: DISCORD_CLIENT_SECRET
+        sync: false
+      - key: VITE_DISCORD_CLIENT_ID
+        sync: false
+      # ─── 프론트 공개 URL ───
+      - key: PRAIN_APP_URL
+        sync: false
